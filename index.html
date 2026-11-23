@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#132b43">
+<title>کپی سریع متن | هومان تحریر</title>
+<style>
+:root{color-scheme:light;--navy:#132b43;--teal:#087f70;--paper:#f4f7fa;--ink:#162739;--line:#dfe7ec}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#edf3f7,#fdfdfc);color:var(--ink);font-family:Tahoma,'Segoe UI',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px}
+.wrap{width:min(620px,100%);background:#fff;padding:30px 26px;border:1px solid #e9eef3;border-radius:24px;box-shadow:0 15px 45px #193b551a}
+.badge{display:inline-flex;align-items:center;background:#e9f6f3;color:#006457;border-radius:50px;padding:8px 14px;font-size:12px;font-weight:bold;margin-bottom:14px}
+h1{font-size:25px;color:var(--navy);margin:0 0 12px}p{line-height:2;font-size:14px;color:#526575;margin:0 0 18px}
+textarea,.linkbox,.message{font-family:inherit;direction:rtl;width:100%;font-size:16px;line-height:2.2;border:1px solid var(--line);border-radius:15px;background:#fafcfe;padding:16px;color:#1d3143;overflow-wrap:anywhere;white-space:pre-wrap}textarea{min-height:200px;resize:vertical;outline-color:#70b7ad}.message{min-height:130px;margin:18px 0;cursor:pointer;user-select:text}.message:active{background:#eaf7f5}
+button{font-family:inherit;font-size:15px;cursor:pointer;border:0;border-radius:12px;background:var(--teal);color:#fff;padding:14px 18px;font-weight:bold;min-height:48px}button.secondary{background:var(--navy)}button.ghost{background:#eef4f7;color:var(--navy)}.buttons{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}.buttons>*{flex:1 1 150px}
+.status{color:#006658;font-size:14px;min-height:24px;margin:9px 0}.notice{font-size:12px;color:#718392;line-height:2;margin-top:15px}.linkbox{font-family:Arial,sans-serif;font-size:13px;direction:ltr;text-align:left;white-space:normal;width:100%;padding:12px;margin-top:14px}.hidden{display:none}hr{height:1px;background:#e9edf1;border:0;margin:22px 0}footer{font-size:12px;color:#81909b;text-align:center;margin-top:20px}
+@media (max-width:440px){.wrap{padding:22px 16px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="badge">✦ ابزار رایگان کپی سریع</div>
+<section id="builder">
+<h1>برای هر متن، لینک کپی بساز</h1>
+<p>متنت را بنویس، «ساخت لینک» را بزن و لینک را در واتساپ یا دایرکت بفرست. مخاطب با باز کردن لینک و یک ضربه روی متن یا دکمه، آن را کپی می‌کند.</p>
+<label for="source"><strong>متن موردنظر</strong></label>
+<textarea id="source" spellcheck="false">سلام 🌷
+برای دریافت لیست قیمت عمده محصولات هومان تحریر، کلمه «لیست» را ارسال کنید.</textarea>
+<div class="buttons"><button id="create">🔗 ساخت لینک کپی</button><button class="ghost" id="copySource">📋 کپی همین متن</button></div>
+<div id="linkPanel" class="hidden"><label for="link"><strong>لینک آماده ارسال</strong></label><input class="linkbox" id="link" readonly><div class="buttons"><button class="secondary" id="copyLink">کپی لینک</button><button class="ghost" id="shareLink">اشتراک‌گذاری</button></div></div>
+<div id="builderStatus" class="status" role="status" aria-live="polite"></div>
+<div class="notice">توجه: برای اینکه لینک روی گوشی مشتری باز شود، باید این فایل روی یک سرویس HTTPS مثل GitHub Pages منتشر شده باشد. متن لینک عمومی است؛ اطلاعات محرمانه داخل آن نگذارید. متن‌های خیلی بلند ممکن است لینک طولانی بسازند.</div>
+</section>
+<section id="viewer" class="hidden">
+<h1>متن شما آماده کپی است ✨</h1><p>برای کپی، یک‌بار روی کادر متن یا دکمه زیر بزن.</p>
+<div class="message" id="message" tabindex="0" role="button" aria-label="کپی متن با یک ضربه"></div>
+<div class="buttons"><button id="copyMessage">📋 کپی متن</button></div>
+<div id="viewStatus" class="status" role="status" aria-live="polite"></div>
+<hr><button id="newMessage" class="ghost" type="button">ساخت لینک برای متن جدید</button>
+</section>
+<footer>کپی سریع متن • مناسب موبایل</footer>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const baseURL = () => location.href.split('#')[0];
+const isWebPublished = () => /^https?:$/.test(location.protocol);
+function status(target,msg){$(target).textContent=msg;}
+async function copyText(text,target){
+  if(!text.trim()){status(target,'ابتدا یک متن وارد کنید.');return;}
+  try{
+    if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);status(target,'✅ کپی شد! حالا در اپ دلخواه جای‌گذاری کنید.');return;}
+  }catch(e){}
+  const t=document.createElement('textarea');t.value=text;t.setAttribute('readonly','');t.style.cssText='position:fixed;top:-9999px;opacity:0';document.body.appendChild(t);t.focus();t.select();
+  try{if(document.execCommand('copy')){status(target,'✅ کپی شد!');t.remove();return;}}catch(e){}t.remove();
+  status(target,'مرورگر اجازه کپی خودکار نداد. متن را لمس طولانی کنید و Copy را بزنید.');
+}
+function showViewer(text){$('builder').classList.add('hidden');$('viewer').classList.remove('hidden');$('message').textContent=text;}
+function showBuilder(){ $('viewer').classList.add('hidden');$('builder').classList.remove('hidden');}
+function init(){
+  const hash=location.hash;
+  if(hash.startsWith('#text=')){
+    try{const txt=decodeURIComponent(hash.slice(6));if(txt.trim()){showViewer(txt);return;}}catch(e){}
+  }
+  showBuilder();
+}
+$('create').addEventListener('click',()=>{
+ const txt=$('source').value.trim();if(!txt){status('builderStatus','اول متن را بنویسید.');return;}
+ if(!isWebPublished()){status('builderStatus','⚠️ برای ارسال لینک به دیگران، ابتدا فایل index.html را روی GitHub Pages منتشر کنید. فعلاً فقط دکمه «کپی همین متن» کار می‌کند.');return;}
+ const link=baseURL()+'#text='+encodeURIComponent(txt);
+ $('link').value=link;$('linkPanel').classList.remove('hidden');
+ status('builderStatus','✅ لینک ساخته شد. آن را کپی و برای مخاطب ارسال کنید.');
+});
+$('copySource').addEventListener('click',()=>copyText($('source').value,'builderStatus'));
+$('copyLink').addEventListener('click',()=>copyText($('link').value,'builderStatus'));
+$('shareLink').addEventListener('click',async()=>{
+  const url=$('link').value;if(!url)return;
+  if(navigator.share){try{await navigator.share({title:'متن آماده کپی',url});return;}catch(e){}}
+  await copyText(url,'builderStatus');
+});
+$('copyMessage').addEventListener('click',()=>copyText($('message').textContent,'viewStatus'));
+$('message').addEventListener('click',()=>copyText($('message').textContent,'viewStatus'));
+$('message').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();copyText($('message').textContent,'viewStatus');}});
+$('newMessage').addEventListener('click',()=>{history.replaceState(null,'',baseURL());showBuilder();});
+window.addEventListener('hashchange',init);init();
+</script>
+</body>
+</html>
